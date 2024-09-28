@@ -1,2 +1,19 @@
 # FAT32FileSystem
-A file system in FAT32 format. 
+一个对FAT32格式文件系统的基本模拟.
+
+使用连续内存作为磁盘空间, 在此基础上格式化为fat32格式文件系统, 并通过简单shell模拟器对文件系统进行访问与修改.
+
+支持基本命令如下:
+
+- `touch`
+- `mkdir`
+- `ls`
+- `cd`
+- `cat`
+- `echo`
+- `>>`
+- `>`
+- `rm`
+- `mv`
+
+

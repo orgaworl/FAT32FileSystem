@@ -23,7 +23,7 @@
 #define INNER_FILE_NOT_FIND 0
 #define INNER_FILE_FIND 1
 #define DISK_MAXLEN 2560
-#define DEBUG true
+//#define DEBUG true
 
 int setTime(uint16_t& data_, uint16_t& time_);
 int printTime(uint16_t data_, uint16_t time_);
@@ -54,16 +54,28 @@ struct FileStream
 	bool write = 0;
 	bool read = 0;
 
-
 	int DirBlock = -1;  //目录项块
 	int byteSize = 0;
 
 	int curBlockOrd = -1; //块号
-	int curByteOrd = 0;  //块内字节序号
+	int curByteOrd = 0;   //块内字节序号
 };
 class disk
 {
 public:
+	disk(char Disk[DISK_MAXLEN]);
+	int Command_mkdir(const char* path);
+	int Command_delete(const char* path);
+	int Command_open(const char* path, const char* mode, FileStream& file);
+	int Command_write(FileStream& file,char* data, int dataLength);
+	int Command_read(FileStream& file,char* buf, int bufLength);
+	int Command_close(FileStream& file);
+	int Command_ls(const char* path);
+	int Command_touch(const char*path);
+	char* curPathStr;
+
+
+protected:
 	int BLOCK_SIZE = 0;
 	int PBP_SIZE = 0;
 	int FAT_NUM = 0;
@@ -72,17 +84,13 @@ public:
 	int CATALOG_SIZE = 0;
 	int HIDE_BLOCK_NUM = 0;
 
-
 	int curPath;//指向目录项
-	char* curPathStr;
 	char* DBRpoi;
 	uint16_t* FATpoi;
 	char* ROOTpoi;
 	char* ENDpoi;
 
 
-
-	disk(char Disk[DISK_MAXLEN]);
 	DicEntry* dir(int blockOrd);
 	char* ord2addr(int blockOrd);
 	int addr2ord(char* addr);
@@ -95,13 +103,6 @@ public:
 	int isDir(int DirEnt);
 	int findFileInDir(int dirBlock, char* name, int& dstBlock, int& prevBlock);
 	int checkPath(const char* path, int& dstBlock, int& prevBlock);
-	int Command_mkdir(char* path);
-	int Command_mkdir(char** pathSplit, int dirBlock, int step);
 	int deleteDirFile(int block);
-	int Command_delete(char* path);
-	int Command_open(char* path, const char* mode, FileStream& file);
-	int Command_write(FileStream& file, char* data, int dataLength);
-	int Command_read(FileStream& file, char* buf, int bufLength);
-	int Command_close(FileStream& file);
-	int Command_ls(const char* path);
+	int Command_mkdir(char** pathSplit, int dirBlock, int step);
 };

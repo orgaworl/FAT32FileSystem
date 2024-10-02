@@ -7,13 +7,12 @@
 
 - `touch`
 - `mkdir`
-- `ls`
 - `cd`
+- `ls`
 - `cat`
+- `rm`
 - `echo`
 - `>>`
 - `>`
-- `rm`
-- `mv`
 
 

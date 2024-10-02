@@ -115,9 +115,11 @@ disk::disk(char Disk[DISK_MAXLEN])
 		curPathStr[0] = 0x0;
 		this->curPath = rootBlock;
 	}
+
+
 	DicEntry* disk::dir(int blockOrd)
 	{
-		DicEntry* temp = (DicEntry*)ord2addr(blockOrd);
+		//DicEntry* temp = (DicEntry*)ord2addr(blockOrd);
 		return (DicEntry*)ord2addr(blockOrd);
 
 	}
@@ -348,11 +350,8 @@ disk::disk(char Disk[DISK_MAXLEN])
 		prevBlock = tempPrev;
 		return PATH_EXIST;
 	}
-	int disk::Command_mkdir(char* path)
+	int disk::Command_mkdir(const char* path)
 	{
-#ifdef DEBUG
-		printf("sudo mkdir  %s\n", path);
-#endif
 	//初始化
 		char** pathSplit;
 		int step;
@@ -440,7 +439,7 @@ disk::disk(char Disk[DISK_MAXLEN])
 		FATpoi[block] = FAT_NOT_USE;
 		return 1;
 	}
-	int disk::Command_delete(char* path)
+	int disk::Command_delete(const char* path)
 	{
 #ifdef DEBUG
 		printf("sudo rm -rf %s\n\n",path);
@@ -465,13 +464,18 @@ disk::disk(char Disk[DISK_MAXLEN])
 
 	Semaphore mutexSem(1);
 
-	int disk::Command_open(char* path, const char* mode, FileStream& file)
+	int disk::Command_open(const char* path, const char* mode, FileStream& file)
 	{
 #ifdef DEBUG
 		printf("open %s\n", path);
 #endif
 		//模式: r w a r+ w+ a+
-
+		if(path[0]=='.') {
+			char tmpBuf[1024];
+			strcpy(tmpBuf,this->curPathStr);
+			strcat(tmpBuf,&path[1]);
+			path=tmpBuf;
+		}
 		mutexSem.P();
 		int dstBlock, _;
 		int status = checkPath(path, dstBlock, _);
@@ -503,7 +507,7 @@ disk::disk(char Disk[DISK_MAXLEN])
 			file.curBlockOrd = dir(dstBlock)->firstBlockNum;
 			file.curByteOrd = 0;
 		}
-		else
+		else if(mode[0] == 'a')
 		{
 			file.curByteOrd = dir(dstBlock)->size % BLOCK_SIZE;
 			int blockNum = (dir(dstBlock)->size - 1) / BLOCK_SIZE + 1;
@@ -512,7 +516,7 @@ disk::disk(char Disk[DISK_MAXLEN])
 		return PATH_EXIST;
 	}
 
-	int disk::Command_write(FileStream& file, char* data, int dataLength)
+	int disk::Command_write(FileStream& file,char* data, int dataLength)
 	{
 		file.byteSize += dataLength;
 		int writeNum = 0;
@@ -543,12 +547,12 @@ disk::disk(char Disk[DISK_MAXLEN])
 		return 1;
 	}
 
-	int disk::Command_read(FileStream& file, char* buf, int bufLength)
+	int disk::Command_read(FileStream& file,char* buf, int bufLength)
 	{
 		//将文件所有数据存放到buf数组,要求bufLength>=数据长度,否则不予读取
 		int totalLength = file.byteSize;
 		int readNum = 0;
-		if (bufLength < totalLength) {
+		if (bufLength < totalLength+1) {
 			return 0;
 		}
 		while (readNum != totalLength)
@@ -564,6 +568,7 @@ disk::disk(char Disk[DISK_MAXLEN])
 			}
 		}
 		buf[readNum] = 0;
+		return 1;
 	}
 
 	int disk::Command_close(FileStream& file)
@@ -584,9 +589,9 @@ disk::disk(char Disk[DISK_MAXLEN])
 
 	int disk::Command_ls(const char* path)
 	{
-#ifdef DEBUG
-		printf("ls %s\n", path);
-#endif
+		if(path[0]==0) {
+			path=".";
+		}
 		//1. 找到目录文件
 		int dstBlock;
 		int _;
@@ -620,3 +625,8 @@ disk::disk(char Disk[DISK_MAXLEN])
 		printf("\n");
 		return 1;
 	}
+
+int disk::Command_touch(const char *path) {
+		creatEmptyFile(path);
+		return 1;
+}
